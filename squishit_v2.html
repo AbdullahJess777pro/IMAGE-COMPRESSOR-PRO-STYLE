@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SquishIt – Free Image Compressor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:#0e0e10;color:#f0eee8;min-height:100vh;}
+.hero{text-align:center;padding:3.5rem 1.5rem 1.5rem;}
+.logo{font-family:'Syne',sans-serif;font-size:2.8rem;font-weight:800;letter-spacing:-2px;background:linear-gradient(135deg,#ff6b35,#f7c59f);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.tagline{font-size:1rem;color:#555;margin-top:0.3rem;font-weight:300;}
+.drop-zone{margin:1.5rem auto;max-width:660px;border:2px dashed #222;border-radius:20px;padding:2.5rem 2rem;cursor:pointer;transition:all 0.2s;text-align:center;}
+.drop-zone:hover,.drop-zone.drag-over{border-color:#ff6b35;background:rgba(255,107,53,0.04);}
+.drop-icon{font-size:2.5rem;margin-bottom:0.8rem;}
+.drop-text{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;color:#ddd;}
+.drop-sub{font-size:0.82rem;color:#444;margin-top:0.4rem;}
+#file-input{display:none;}
+.browse-btn{display:inline-block;margin-top:1rem;padding:0.55rem 1.4rem;background:#ff6b35;color:#fff;border-radius:50px;font-size:0.88rem;font-weight:500;cursor:pointer;transition:opacity 0.2s;}
+.browse-btn:hover{opacity:0.85;}
+.controls{max-width:660px;margin:0 auto 1rem;padding:0 1.5rem;display:none;}
+.controls.visible{display:block;}
+.ctrl-card{background:#18181c;border-radius:14px;padding:1.2rem 1.5rem;}
+.ctrl-row{display:flex;justify-content:space-between;font-size:0.85rem;color:#777;margin-bottom:0.5rem;}
+.ctrl-row span:last-child{color:#ff6b35;font-weight:600;}
+input[type=range]{width:100%;accent-color:#ff6b35;cursor:pointer;}
+.fmt-row{display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap;align-items:center;}
+.fmt-lbl{font-size:0.78rem;color:#555;}
+.fmt-btn{padding:0.35rem 0.9rem;border-radius:50px;border:1.5px solid #2a2a30;background:transparent;color:#666;font-size:0.8rem;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+.fmt-btn.active{border-color:#ff6b35;background:rgba(255,107,53,0.1);color:#ff6b35;}
+.resize-row{display:flex;gap:8px;margin-top:0.8rem;flex-wrap:wrap;align-items:center;}
+.resize-lbl{font-size:0.78rem;color:#555;}
+.compress-btn{display:none;margin:0 auto 1.2rem;max-width:660px;width:calc(100% - 3rem);padding:0.85rem;background:#ff6b35;border:none;border-radius:12px;color:#fff;font-size:1rem;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;transition:opacity 0.2s;}
+.compress-btn.visible{display:block;}
+.compress-btn:hover{opacity:0.88;}
+.compress-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.stats-bar{max-width:660px;margin:0 auto 1.2rem;padding:0.9rem 1.5rem;display:none;gap:1rem;background:#18181c;border-radius:12px;}
+.stats-bar.visible{display:flex;}
+.stat{text-align:center;flex:1;}
+.stat-val{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:#ff6b35;}
+.stat-lbl{font-size:0.68rem;color:#444;margin-top:2px;}
+.divider{width:1px;background:#2a2a30;}
+.results{max-width:660px;margin:0 auto 1rem;padding:0 1.5rem;display:none;}
+.results.visible{display:block;}
+.result-card{background:#18181c;border-radius:14px;padding:1.3rem;margin-bottom:0.8rem;}
+.result-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.8rem;}
+.file-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;color:#eee;word-break:break-all;}
+.saving-badge{background:rgba(255,107,53,0.15);color:#ff6b35;border-radius:50px;padding:0.2rem 0.65rem;font-size:0.75rem;font-weight:500;white-space:nowrap;margin-left:0.6rem;flex-shrink:0;}
+.size-row{display:flex;gap:0.8rem;align-items:center;margin-bottom:0.8rem;font-size:0.82rem;flex-wrap:wrap;}
+.sz-lbl{color:#444;}
+.sz-val{color:#999;font-weight:500;}
+.sz-val.new{color:#ff6b35;}
+.pb{height:4px;background:#2a2a30;border-radius:2px;overflow:hidden;margin-bottom:0.8rem;}
+.pbf{height:100%;background:linear-gradient(90deg,#ff6b35,#f7c59f);border-radius:2px;}
+.preview-row{display:flex;gap:0.8rem;margin-bottom:0.8rem;}
+.prev-box{flex:1;text-align:center;}
+.prev-box img{width:100%;max-height:130px;object-fit:contain;border-radius:8px;background:#111;border:1px solid #222;}
+.prev-box p{font-size:0.7rem;color:#444;margin-top:0.3rem;}
+.dl-btn{display:block;width:100%;padding:0.7rem;background:#ff6b35;border:none;border-radius:9px;color:#fff;font-size:0.88rem;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:center;text-decoration:none;}
+.dl-btn:hover{opacity:0.88;}
+.features{max-width:660px;margin:0.5rem auto 2.5rem;padding:0 1.5rem;display:grid;grid-template-columns:repeat(3,1fr);gap:0.8rem;}
+.feat{background:#18181c;border-radius:12px;padding:1rem;text-align:center;}
+.feat-icon{font-size:1.3rem;margin-bottom:0.4rem;}
+.feat-title{font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;color:#ddd;margin-bottom:0.2rem;}
+.feat-desc{font-size:0.7rem;color:#444;line-height:1.5;}
+footer{text-align:center;padding:1.5rem;font-size:0.75rem;color:#333;}
+@media(max-width:480px){.logo{font-size:2rem;}.features{grid-template-columns:1fr;}.preview-row{flex-direction:column;}.stats-bar{gap:0.5rem;}}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="logo">SquishIt</div>
+  <div class="tagline">Free image compression — no limits, no signup, no nonsense.</div>
+</div>
+
+<div class="drop-zone" id="drop-zone">
+  <div class="drop-icon">&#128444;</div>
+  <div class="drop-text" id="drop-text">Drop images here</div>
+  <div class="drop-sub">PNG, JPG, WEBP — multiple files supported</div>
+  <label class="browse-btn" for="file-input">Browse Files</label>
+  <input type="file" id="file-input" accept="image/*" multiple>
+</div>
+
+<div class="controls" id="controls">
+  <div class="ctrl-card">
+    <div class="ctrl-row"><span>Quality</span><span id="quality-val">75%</span></div>
+    <input type="range" id="quality" min="10" max="95" value="75">
+    <div class="fmt-row">
+      <span class="fmt-lbl">Format:</span>
+      <button class="fmt-btn active" data-fmt="jpeg">JPEG</button>
+      <button class="fmt-btn" data-fmt="png">PNG</button>
+      <button class="fmt-btn" data-fmt="webp">WebP</button>
+    </div>
+    <div class="resize-row">
+      <span class="resize-lbl">Max width:</span>
+      <button class="fmt-btn active" data-w="0">Original</button>
+      <button class="fmt-btn" data-w="1920">1920px</button>
+      <button class="fmt-btn" data-w="1280">1280px</button>
+      <button class="fmt-btn" data-w="800">800px</button>
+    </div>
+  </div>
+</div>
+
+<button class="compress-btn" id="compress-btn">Compress Images</button>
+
+<div class="stats-bar" id="stats-bar">
+  <div class="stat"><div class="stat-val" id="stat-files">0</div><div class="stat-lbl">Files</div></div>
+  <div class="divider"></div>
+  <div class="stat"><div class="stat-val" id="stat-saved">0%</div><div class="stat-lbl">Avg savings</div></div>
+  <div class="divider"></div>
+  <div class="stat"><div class="stat-val" id="stat-size">0 KB</div><div class="stat-lbl">Space saved</div></div>
+</div>
+
+<div class="results" id="results"></div>
+
+<div class="features">
+  <div class="feat"><div class="feat-icon">&#128274;</div><div class="feat-title">100% Private</div><div class="feat-desc">Everything runs in your browser. Images never leave your device.</div></div>
+  <div class="feat"><div class="feat-icon">&#9889;</div><div class="feat-title">Real Compression</div><div class="feat-desc">Quality slider and resize actually shrink your file size.</div></div>
+  <div class="feat"><div class="feat-icon">&#8734;</div><div class="feat-title">No Limits</div><div class="feat-desc">Compress as many images as you want, completely free.</div></div>
+</div>
+
+<footer>Made with &#9825; &mdash; SquishIt is free for everyone, forever.</footer>
+
+<script>
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const controls = document.getElementById('controls');
+const compressBtn = document.getElementById('compress-btn');
+const resultsEl = document.getElementById('results');
+const statsBar = document.getElementById('stats-bar');
+const qualitySlider = document.getElementById('quality');
+const qualityVal = document.getElementById('quality-val');
+
+let selectedFiles = [];
+let outputFormat = 'jpeg';
+let maxWidth = 0;
+
+qualitySlider.addEventListener('input', () => { qualityVal.textContent = qualitySlider.value + '%'; });
+
+document.querySelectorAll('.fmt-btn[data-fmt]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.fmt-btn[data-fmt]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    outputFormat = btn.dataset.fmt;
+  });
+});
+
+document.querySelectorAll('.fmt-btn[data-w]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.fmt-btn[data-w]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    maxWidth = parseInt(btn.dataset.w);
+  });
+});
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  handleFiles([...e.dataTransfer.files].filter(f => f.type.startsWith('image/')));
+});
+dropZone.addEventListener('click', e => { if(e.target.tagName!=='LABEL'&&e.target.tagName!=='INPUT') fileInput.click(); });
+fileInput.addEventListener('change', () => handleFiles([...fileInput.files]));
+
+function handleFiles(files) {
+  if (!files.length) return;
+  selectedFiles = files;
+  controls.classList.add('visible');
+  compressBtn.classList.add('visible');
+  resultsEl.classList.remove('visible');
+  resultsEl.innerHTML = '';
+  statsBar.classList.remove('visible');
+  document.getElementById('drop-text').textContent = files.length === 1 ? files[0].name : files.length + ' images selected';
+}
+
+compressBtn.addEventListener('click', () => {
+  if (!selectedFiles.length) return;
+  resultsEl.innerHTML = '';
+  resultsEl.classList.add('visible');
+  statsBar.classList.remove('visible');
+  compressBtn.disabled = true;
+  compressBtn.textContent = 'Compressing...';
+
+  const quality = parseInt(qualitySlider.value) / 100;
+  const mimeType = outputFormat === 'png' ? 'image/png' : outputFormat === 'webp' ? 'image/webp' : 'image/jpeg';
+  const ext = outputFormat === 'png' ? 'png' : outputFormat === 'webp' ? 'webp' : 'jpg';
+
+  let processed = 0;
+  let totalSaved = 0;
+  let totalOrig = 0;
+
+  selectedFiles.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const origSrc = e.target.result;
+      const img = new Image();
+      img.onload = () => {
+        let w = img.naturalWidth;
+        let h = img.naturalHeight;
+        if (maxWidth > 0 && w > maxWidth) {
+          h = Math.round(h * maxWidth / w);
+          w = maxWidth;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+
+        if (mimeType === 'image/jpeg') {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, w, h);
+        }
+        ctx.drawImage(img, 0, 0, w, h);
+
+        const compressedDataURL = canvas.toDataURL(mimeType, quality);
+
+        const origSize = file.size;
+        const b64 = compressedDataURL.split(',')[1];
+        const compSize = Math.floor(b64.length * 0.75);
+        const saving = Math.max(0, Math.round((1 - compSize / origSize) * 100));
+        const outName = file.name.replace(/\.[^.]+$/, '') + '_compressed.' + ext;
+
+        totalSaved += Math.max(0, origSize - compSize);
+        totalOrig += origSize;
+
+        const card = document.createElement('div');
+        card.className = 'result-card';
+        card.innerHTML =
+          '<div class="result-header">' +
+            '<div class="file-name">' + esc(file.name) + '</div>' +
+            '<div class="saving-badge">' + saving + '% smaller</div>' +
+          '</div>' +
+          '<div class="size-row">' +
+            '<span class="sz-lbl">Original</span><span class="sz-val">' + fmt(origSize) + '</span>' +
+            '<span style="color:#333">&#8594;</span>' +
+            '<span class="sz-lbl">Compressed</span><span class="sz-val new">' + fmt(compSize) + '</span>' +
+          '</div>' +
+          '<div class="pb"><div class="pbf" style="width:' + (100 - saving) + '%"></div></div>' +
+          '<div class="preview-row">' +
+            '<div class="prev-box"><img src="' + origSrc + '"><p>Original &middot; ' + fmt(origSize) + '</p></div>' +
+            '<div class="prev-box"><img src="' + compressedDataURL + '"><p>Compressed &middot; ' + fmt(compSize) + '</p></div>' +
+          '</div>' +
+          '<a class="dl-btn" href="' + compressedDataURL + '" download="' + esc(outName) + '">&#8595; Download ' + esc(outName) + '</a>';
+        resultsEl.appendChild(card);
+
+        processed++;
+        if (processed === selectedFiles.length) {
+          compressBtn.textContent = 'Compress Images';
+          compressBtn.disabled = false;
+          const avg = totalOrig > 0 ? Math.round((totalSaved / totalOrig) * 100) : 0;
+          document.getElementById('stat-files').textContent = processed;
+          document.getElementById('stat-saved').textContent = avg + '%';
+          document.getElementById('stat-size').textContent = fmt(totalSaved);
+          statsBar.classList.add('visible');
+        }
+      };
+      img.src = origSrc;
+    };
+    reader.readAsDataURL(file);
+  });
+});
+
+function fmt(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return Math.round(b/1024) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
+}
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
